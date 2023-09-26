@@ -19,7 +19,7 @@ hello <- function() {
 
 library(ggplot2)
 library(ggpubr)
-
+library(dplyr)
 my_show_dists <- function(df) {
   plots <- list()
   for(colname in colnames(df)) {
@@ -33,8 +33,12 @@ my_show_dists <- function(df) {
   print(ggarrange(plotlist=plots, ncol = plots_per_row, nrow = ceiling(as.double(length(plots)) / as.double(plots_per_row))))
 }
 
+my_unify_na <- function(df) {
+  return (df |> mutate_all(~ ifelse(is.nan(.) | as.character(.) == "nan" | is.na(.), NA, .)))
+}
+
 my_na_rate <- function(df) {
-  na_p <- t(df |> summarise_all(list(name = ~sum(is.na(.))/length(.))))
+  na_p <- t(df |> dplyr::summarise_all(list(name = ~sum(is.na(.))/length(.))))
   NA_perctage_df <- data.frame (
     column_name = rownames(na_p),
     NA_percent = na_p
@@ -44,8 +48,9 @@ my_na_rate <- function(df) {
   return (NA_perctage_df)
 }
 
-my_impute_column <- function(df, columns, exp_value_to_be_replaced, func_new_value) {
-
+my_impute_column <- function(df, column, func_new_value) {
+  df <- df |> mutate(column = ifelse(is.na(column), func_new_value, column))
+  return (df)
 }
 
 my_assess_model <- function() {
